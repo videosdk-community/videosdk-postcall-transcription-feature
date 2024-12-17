@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import {
-  useMeeting,
-  Constants,
-  useTranscription,
-} from '@videosdk.live/react-sdk';
+import { Constants, useMeeting } from '@videosdk.live/react-sdk';
 
 import Button from '../../@ui/button';
 import { ButtonIcon } from '../../@ui/button-icon';
@@ -13,37 +9,39 @@ import copyIcon from '../../../public/icons/copy.png';
 import { Controls } from '../controls';
 import { Participants } from '../participants';
 
+const {
+  RECORDING_STARTING,
+  RECORDING_STARTED,
+  RECORDING_STOPPING,
+  RECORDING_STOPPED,
+} = Constants.recordingEvents;
+
 export const MeetingView = ({ meetingId, onMeetingLeft }) => {
   const [joined, setJoined] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
-  const [transcriptionText, setTranscriptionText] = useState('');
 
-  const { join, participants, transcriptionState } = useMeeting({
-    onMeetingJoined: () => setJoined('JOINED'),
-  });
+  const { join, participants, startRecording, stopRecording, recordingState } =
+    useMeeting({
+      onMeetingJoined: () => setJoined('JOINED'),
+    });
 
-  const { startTranscription, stopTranscription } = useTranscription({
-    onTranscriptionStateChanged: (status) => {},
-    onTranscriptionText: (data) => {
-      const { text } = data;
-      setTranscriptionText(text);
-    },
-  });
-
-  const {
-    TRANSCRIPTION_STARTED,
-    TRANSCRIPTION_STARTING,
-    TRANSCRIPTION_STOPPED,
-    // TRANSCRIPTION_STOPPING,
-  } = Constants.transcriptionEvents;
-
-  const handleTranscription = () => {
-    // if transcriptionState === started -> stopTranscripition
-    // else startTranscription
-    if (transcriptionState === TRANSCRIPTION_STARTED) {
-      stopTranscription();
-    } else if (transcriptionState === TRANSCRIPTION_STOPPED) {
-      startTranscription();
+  const handleRecording = () => {
+    if (recordingState === RECORDING_STARTED) {
+      stopRecording();
+    } else if (recordingState === RECORDING_STOPPED) {
+      startRecording(
+        'https://webhook.site/ad755096-3582-498c-a9f0-c1241cdc5caf',
+        null,
+        null,
+        {
+          enabled: true,
+          summary: {
+            enabled: true,
+            prompt:
+              'Write summary in sections like Title, Agenda, Speakers, Action Items, Outlines, Notes and Summary',
+          },
+        }
+      );
     }
   };
 
@@ -87,13 +85,13 @@ export const MeetingView = ({ meetingId, onMeetingLeft }) => {
                 <div className="flex gap-4">
                   <ButtonIcon
                     className="bg-white px-4 py-4 rounded-md"
-                    onClick={handleTranscription}
+                    onClick={handleRecording}
                   >
-                    {transcriptionState === TRANSCRIPTION_STARTED
-                      ? 'stop transcription'
-                      : transcriptionState === TRANSCRIPTION_STARTING
-                        ? 'starting...'
-                        : 'start transcripiton'}
+                    {recordingState === RECORDING_STARTED
+                      ? 'stop recording'
+                      : recordingState === RECORDING_STARTING
+                        ? 'recording...'
+                        : 'start recording'}
                   </ButtonIcon>
                 </div>
               </div>
@@ -101,13 +99,6 @@ export const MeetingView = ({ meetingId, onMeetingLeft }) => {
 
             {/* participants */}
             <Participants participants={participants} />
-
-            {/* Transcription Area */}
-            {transcriptionState === TRANSCRIPTION_STARTED && (
-              <div className="fixed bottom-40 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-4 rounded-lg shadow-lg text-center">
-                {transcriptionText ?? transcriptionText}
-              </div>
-            )}
           </div>
         ) : joined === 'JOINING' ? (
           <Button

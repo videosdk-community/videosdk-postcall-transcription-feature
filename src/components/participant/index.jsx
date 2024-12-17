@@ -42,16 +42,14 @@ export const Participant = ({ participantId }) => {
   return (
     <div>
       <audio ref={micRef} autoPlay muted={isLocal} />
-      <div className="rounded-md">
-        {webcamOn && (
-          <video
-            ref={videoRef}
-            autoPlay
-            style={{ borderRadius: '20px' }}
-            className={`${isLocal ? 'absolute top-0 left-[15%] w-[70%] h-[90%] rounded-md' : 'absolute right-[50px] bottom-[150px] w-[200px]'}`}
-            playsInline
-          />
-        )}
+      <div
+        className={`rounded-md ${
+          isLocal
+            ? 'absolute top-[40%] -translate-y-1/2 left-[15%] w-[70%] overflow-hidden'
+            : 'absolute right-[50px] bottom-[150px] w-[200px] overflow-hidden'
+        }`}
+      >
+        {webcamOn && <video ref={videoRef} className="w-full" playsInline />}
       </div>
     </div>
   );
